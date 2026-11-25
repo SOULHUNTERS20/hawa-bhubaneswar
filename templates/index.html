@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} · What the city actually breathes{% endblock %}
+
+{% block content %}
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="kicker">Community air quality · Bhubaneswar, Odisha</span>
+      <h1>What Bhubaneswar <em>actually</em> breathes.</h1>
+      <p class="lead">
+        Official monitors measure a few fixed points. Hawa Bhubaneswar collects hyperlocal
+        readings (AQI, PM2.5, temperature and how the air feels) from people across five
+        very different parts of the city.
+      </p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="{{ url_for('study.participate_page') }}">Take part in the study</a>
+        <a class="btn" href="{{ url_for('calculator') }}">Calculate my personal AQI</a>
+      </div>
+    </div>
+
+    <!-- Filled in by home.js with the live city average -->
+    <div class="card now-card" id="now-card">
+      <div class="stripe" id="now-stripe"></div>
+      <span class="kicker">City right now</span>
+      <div class="big-aqi" id="now-aqi">…</div>
+      <div id="now-band"></div>
+      <p class="muted small mt" id="now-meta">Loading live data…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Stats ===== -->
+<section class="section-tight">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="value" id="stat-submissions">…</div><div class="label">Submissions</div></div>
+      <div class="stat"><div class="value" id="stat-participants">…</div><div class="label">Participants</div></div>
+      <div class="stat"><div class="value" id="stat-zones">{{ zones|length }}</div><div class="label">Study zones</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Zones ===== -->
+<section class="section">
+  <div class="wrap">
+    <span class="kicker">Study zones</span>
+    <h2>Five zones, five kinds of air</h2>
+    <p class="muted">Each card shows the latest reading sent in by the community for that zone.</p>
+    <div class="grid grid-3" id="zone-grid">
+      {% for z in zones %}
+      <article class="card zone-card" data-zone="{{ z.id }}">
+        <div class="zone-top">
+          <span class="zone-num">{{ z.id }}</span>
+          <span class="tag">{{ z.type }}</span>
+        </div>
+        <h3>{{ z.name }}</h3>
+        <p class="muted small">{{ z.description }}</p>
+        <div class="zone-slot"><div class="empty">Loading…</div></div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ===== How to take part ===== -->
+<section class="section">
+  <div class="wrap">
+    <span class="kicker">Take part</span>
+    <h2>How the {{ cfg.STUDY_DAYS }}-day study works</h2>
+    <div class="grid grid-3 mt">
+      <div class="card">
+        <div class="step-num">01</div>
+        <h3>Register anonymously</h3>
+        <p class="muted">Give consent and get an ID like <b>BBSR-Z3-482</b>. We ask for an age group, gender and type of
+          work, never a name, email or phone number.</p>
+        <a href="{{ url_for('participant_page') }}">Get my ID →</a>
+      </div>
+      <div class="card">
+        <div class="step-num">02</div>
+        <h3>Keep a daily diary</h3>
+        <p class="muted">Note where you were and what you did. We match it with hourly PM2.5 to work out how much
+          you breathed in, and send alerts that fit your day.</p>
+        <a href="{{ url_for('study.diary_page') }}">Open the diary →</a>
+      </div>
+      <div class="card">
+        <div class="step-num">03</div>
+        <h3>Report what you see</h3>
+        <p class="muted">Send readings from a monitor or AQI app, and report hotspots like dust or waste burning
+          for students to verify.</p>
+        <a href="{{ url_for('study.participate_page') }}">See all steps →</a>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <h3>CPCB AQI colour bands</h3>
+      <div class="legend">
+        <span class="aqi-chip" data-band="Good">0–50 Good</span>
+        <span class="aqi-chip" data-band="Satisfactory">51–100 Satisfactory</span>
+        <span class="aqi-chip" data-band="Moderate">101–200 Moderate</span>
+        <span class="aqi-chip" data-band="Poor">201–300 Poor</span>
+        <span class="aqi-chip" data-band="Very Poor">301–400 Very Poor</span>
+        <span class="aqi-chip" data-band="Severe">401+ Severe</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

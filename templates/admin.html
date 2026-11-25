@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ site_name }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+{% if mode in ("disabled", "login") %}
+<section class="section">
+  <div class="wrap">
+    <div class="login-card">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h16a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>
+      </span>
+      <h1>Team sign in</h1>
+      {% if mode == "disabled" %}
+        <p class="muted">The admin panel is switched off because no <code>ADMIN_PASSWORD</code> is set on the server.
+          The README explains how to set it.</p>
+      {% else %}
+        <p class="muted">For the project team and teachers. Manage readings, participants and study data.</p>
+        <form class="form" method="post" action="{{ url_for('admin') }}">
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required autofocus>
+          </div>
+          {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+          <button class="btn btn-primary" type="submit">Sign in</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% else %}
+<section class="admin-head">
+  <div class="wrap admin-wrap">
+    <div>
+      <h1>Admin</h1>
+      <p class="muted">{{ cfg.GROUP_NAME }} · {{ cfg.CITY }} air quality study</p>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-sm" href="{{ url_for('data_page') }}">Public data page</a>
+      <form method="post" action="{{ url_for('admin_logout') }}"><button class="btn btn-sm" type="submit">Sign out</button></form>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap admin-wrap">
+
+
+    <!-- Overview -->
+    <div class="admin-stats">
+      <div class="admin-stat">
+        <span>Participants</span>
+        <b>{{ stats.participants }}<small> / {{ stats.target }}</small></b>
+        <div class="tp-bar"><div style="width: {{ [100, (100 * stats.participants / stats.target)|round]|min }}%"></div></div>
+        <p>{% for zid, n in stats.zones.items() %}Z{{ zid }} {{ n }}{{ " · " if not loop.last }}{% endfor %}</p>
+      </div>
+      <div class="admin-stat">
+        <span>Diary</span>
+        <b>{{ stats.completed }}<small> finished {{ stats.study_days }} days</small></b>
+        <p>{{ stats.diarists }} keeping a diary · {{ stats.avg_days }} days on average · mean PAQE {{ stats.mean_paqe }} µg/day</p>
+      </div>
+      <div class="admin-stat">
+        <span>Decision Responsiveness Score</span>
+        <b>{{ stats.drs_before if stats.drs_before is not none else "–" }}<small> → </small>{{ stats.drs_after if stats.drs_after is not none else "–" }}</b>
+        <p>{{ stats.before }} before · {{ stats.after }} after ·
+          {% if stats.persist_total %}{{ (100 * stats.persist_yes / stats.persist_total)|round|int }}% still following changes{% else %}no follow-up yet{% endif %}</p>
+      </div>
+      <div class="admin-stat">
+        <span>Hotspots and readings</span>
+        <b>{{ stats.verified }}<small> verified of {{ stats.hotspots }}</small></b>
+        <p>{{ stats.pending }} waiting for verification · {{ stats.readings }} readings ({{ stats.readings_24h }} in the last 24 h) ·
+          {{ stats.flagged }} flagged</p>
+      </div>
+    </div>
+
+    <!-- Table editor -->
+    <div class="admin-panel">
+      <div class="admin-tabs" role="tablist">
+        <button role="tab" data-table="readings" aria-selected="true">Readings</button>
+        <button role="tab" data-table="participants" aria-selected="false">Participants</button>
+        <button role="tab" data-table="diary" aria-selected="false">Diary</button>
+        <button role="tab" data-table="survey" aria-selected="false">Surveys</button>
+        <button role="tab" data-table="checkins" aria-selected="false">Spike check-ins</button>
+        <button role="tab" data-table="hotspots" aria-selected="false">Hotspots</button>
+      </div>
+
+      <div class="admin-toolbar">
+        <input type="search" id="admin-search" placeholder="Search this table…" aria-label="Search this table">
+        <select id="admin-filter" aria-label="Filter"></select>
+        <span class="muted small" id="admin-count"></span>
+        <a class="btn btn-sm" id="admin-export" href="#">Export .csv</a>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead id="admin-thead"></thead>
+          <tbody id="admin-tbody"><tr><td class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-pager">
+        <button class="btn btn-sm" type="button" id="page-prev">Previous</button>
+        <span class="muted small" id="page-info"></span>
+        <button class="btn btn-sm" type="button" id="page-next">Next</button>
+      </div>
+    </div>
+    <p class="muted small mt">Click a row to edit it. Values worked out by the site (PAQE, DRS, reference AQI) update
+      automatically. Files with participant IDs are for the team only; the public pages show group totals.</p>
+  </div>
+</section>
+
+<!-- Edit dialog -->
+<dialog class="admin-dialog" id="edit-dialog">
+  <form method="dialog" id="edit-form">
+    <header>
+      <h3 id="edit-title">Edit row</h3>
+      <button class="icon-btn" value="cancel" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <dl class="admin-locked" id="edit-locked"></dl>
+    <div class="form" id="edit-fields"></div>
+    <div id="edit-msg" role="status"></div>
+    <footer>
+      <div class="btn-row">
+        <button class="btn btn-sm btn-danger" type="button" id="edit-delete">Delete row</button>
+        <button class="btn btn-sm btn-danger hidden" type="button" id="edit-withdraw">Withdraw participant</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" value="cancel">Cancel</button>
+        <button class="btn btn-sm btn-primary" type="button" id="edit-save">Save changes</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+<div class="toast hidden" id="toast" role="status"></div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if mode == "dashboard" %}
+<script>
+  window.ADMIN = {
+    exports: {
+      readings: "{{ url_for('download_csv') }}",
+      participants: "{{ url_for('study.admin_download', name='participants') }}",
+      diary: "{{ url_for('study.admin_download', name='diary') }}",
+      survey: "{{ url_for('study.admin_download', name='survey') }}",
+      checkins: "{{ url_for('study.admin_download', name='checkins') }}",
+      hotspots: "{{ url_for('study.admin_download', name='hotspots') }}"
+    },
+    labels: {
+      Location: {{ cfg.MICROENVIRONMENTS | tojson }},
+      Activity: {{ cfg.ACTIVITIES | tojson }}
+    }
+  };
+</script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+
+# Study data and caches: created automatically when the site runs.
+# Never commit them (participant data must stay private).
+data/
+
+# Local secrets, if you ever keep them in a file
+.env

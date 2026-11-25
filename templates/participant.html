@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Register · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">SOP steps 1–6 · Consent and registration</span>
+    <h1>Register as a participant</h1>
+    <p>You get an anonymous ID that links your diary, survey and readings together without saying who you are.
+      It is saved in this browser, so you stay linked every time you visit.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap grid grid-2" style="align-items:start">
+
+    <!-- Shown when this browser already has an ID -->
+    <div class="card id-card hidden" id="has-id">
+      <span class="kicker">Your ID on this device</span>
+      <div class="id-value" id="id-value"></div>
+      <p class="muted" id="id-zone"></p>
+      <div class="btn-row" style="justify-content:center">
+        <a class="btn btn-primary" href="{{ url_for('study.participate_page') }}">Continue the study →</a>
+        <button class="btn" type="button" id="copy-btn">Copy ID</button>
+      </div>
+      <p class="small muted mt">Write it down: you'll need it to link a new phone or browser.</p>
+      <button class="btn btn-sm btn-danger" type="button" id="forget-btn">Forget ID on this device</button>
+    </div>
+
+    <!-- Registration form (new ID), or "complete your profile" for an older ID -->
+    <form class="card form hidden" id="profile-form" novalidate>
+      <div>
+        <h2 style="margin-bottom:.3em" id="form-title">Get my ID</h2>
+        <p class="muted small" id="form-intro">All questions are required by the study protocol. Answers are anonymous
+          and only published as group totals.</p>
+      </div>
+
+      <div class="field" id="zone-field">
+        <label for="new-zone">Residential zone ({{ cfg.CITY }})</label>
+        <select id="new-zone">
+          {% for z in zones %}<option value="{{ z.id }}">Zone {{ z.id }}: {{ z.name }} ({{ z.type }})</option>{% endfor %}
+        </select>
+        <span class="hint">The zone where you live. Its number becomes part of your ID.</span>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="age_group">Age group</label>
+          <select id="age_group"><option value="">Choose…</option>
+            {% for a in cfg.AGE_GROUPS %}<option>{{ a }}</option>{% endfor %}</select>
+        </div>
+        <div class="field">
+          <label for="gender">Gender</label>
+          <select id="gender"><option value="">Choose…</option>
+            {% for g in cfg.GENDERS %}<option>{{ g }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label for="occupation">Occupation</label>
+          <select id="occupation"><option value="">Choose…</option>
+            {% for o in cfg.OCCUPATIONS %}<option>{{ o }}</option>{% endfor %}</select>
+        </div>
+        <div class="field">
+          <label for="workplace">Workplace</label>
+          <select id="workplace"><option value="">Choose…</option>
+            {% for w in cfg.WORKPLACES %}<option>{{ w }}</option>{% endfor %}</select>
+        </div>
+      </div>
+
+      <div class="alert small">
+        <b>Consent to participate.</b> I am 18 or older and agree to take part in this {{ cfg.GROUP_NAME }} citizen-science
+        study for {{ cfg.STUDY_DAYS }} days. I understand that my anonymous ID, zone, age group, gender, occupation,
+        daily time-activity diary, survey answers and reports will be stored, used for academic and citizen-science
+        purposes, and published only as group totals. I can stop at any time.
+        <a href="{{ url_for('ethics') }}">Ethics &amp; consent details</a>.
+      </div>
+      <label class="check"><input type="checkbox" id="consent"> <span>I consent to participate.</span></label>
+
+      <div id="new-msg" role="status"></div>
+      <button class="btn btn-primary" type="submit" id="get-id-btn">Get my ID</button>
+    </form>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Registered so far</h3>
+        <p class="muted small" style="margin:0 0 8px">Target: {{ cfg.REGISTRATION_TARGET }} participants ({{ cfg.GROUP_NAME }})</p>
+        <div class="bd-track" style="height:14px"><div class="bd-fill" id="reg-bar" style="width:0%"></div></div>
+        <p class="small mt" id="reg-count" style="margin-bottom:0">…</p>
+      </div>
+      <div class="card form">
+        <div>
+          <h3>Already have an ID?</h3>
+          <p class="muted small">Link it to this browser, for example on a new phone.</p>
+        </div>
+        <div class="input-with-btn">
+          <input type="text" id="link-input" aria-label="Existing participant ID" placeholder="BBSR-Z3-482" autocomplete="off" autocapitalize="characters">
+          <button class="btn" type="button" id="link-btn">Link</button>
+        </div>
+        <div id="link-msg" role="status"></div>
+      </div>
+      <div class="card">
+        <h3>What we never ask for</h3>
+        <p class="muted small" style="margin:0">No names, emails, phone numbers, exact addresses or precise location.
+          Age is asked as a range, never a birth date. <a href="{{ url_for('ethics') }}">Read more</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/participant.js') }}"></script>
+{% endblock %}

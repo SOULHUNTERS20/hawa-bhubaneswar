@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Data &amp; insights · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Open data</span>
+    <h1>Data &amp; insights</h1>
+    <p>Every community reading, public and free to download, plus the study results from the Standard Operating
+      Protocol (<a href="#study">jump to study results</a>). Participant IDs are anonymous.</p>
+    <div class="btn-row">
+      <a class="btn" href="{{ url_for('download_md') }}" download>Download .md</a>
+      <a class="btn" href="{{ url_for('download_csv') }}" download>Download .csv</a>
+    </div>
+  </div>
+</section>
+
+<!-- Shown instead of everything below when there is no data yet -->
+<section class="section-tight hidden" id="no-data">
+  <div class="wrap">
+    <div class="empty" style="padding:48px 20px">
+      <h3>No data yet</h3>
+      <p>Charts and the table appear here as soon as the first reading arrives.</p>
+      <a class="btn btn-primary" href="{{ url_for('submit_page') }}">Be the first to submit</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight hidden" id="has-data">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="value" id="d-total">–</div><div class="label">Readings</div></div>
+      <div class="stat"><div class="value" id="d-people">–</div><div class="label">Contributors</div></div>
+      <div class="stat"><div class="value" id="d-flagged">–</div><div class="label">Flagged for review</div></div>
+    </div>
+
+    <div class="card mt">
+      <h3>Community AQI over time</h3>
+      <p class="muted small">Daily average of community readings per zone (AQI, or AQI worked out from PM2.5).</p>
+      <div class="chart-box"><canvas id="line-chart" aria-label="Community AQI over time by zone"></canvas></div>
+    </div>
+
+    <div class="grid grid-2 mt">
+      <div class="card">
+        <h3>Zones compared</h3>
+        <p class="muted small">Average community AQI per zone, coloured by CPCB band.</p>
+        <div class="chart-box"><canvas id="bar-chart" aria-label="Average community AQI by zone"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Community vs official</h3>
+        <p class="muted small">Community readings next to the official value recorded at the moment of each submission:
+          the CPCB station for zones 3 and 5, the Open-Meteo model for zones without a station.</p>
+        <div class="chart-box"><canvas id="vs-chart" aria-label="Community versus model AQI by zone"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card mt" id="vs-table-card">
+      <h3>The gap, zone by zone</h3>
+      <div class="table-wrap"><table id="vs-table"></table></div>
+      <p class="muted small mt" style="margin-bottom:0">A positive gap means people measured worse air than the official value, the "hyperlocal" effect this project is looking for.</p>
+    </div>
+
+    <div class="mt">
+      <div class="map-toolbar">
+        <h3 style="margin:0">All submissions</h3>
+        <select id="zone-filter" style="width:auto" aria-label="Filter by zone">
+          <option value="">All zones</option>
+          {% for z in zones %}<option value="{{ z.id }}">Zone {{ z.id }}: {{ z.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="table-wrap" style="max-height:560px">
+        <table>
+          <thead><tr>
+            <th>Time</th><th>ID</th><th>Zone</th><th>AQI</th><th>PM2.5</th><th>Temp</th>
+            <th>Feel</th><th>Activity</th><th>Note</th><th>Official AQI</th><th></th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Study results (Standard Operating Protocol) ===================== -->
+<section class="section" id="study">
+  <div class="wrap">
+    <span class="kicker">Standard Operating Protocol · {{ cfg.GROUP_NAME }}</span>
+    <h2>Study results</h2>
+    <p class="muted">Group totals only. Individual profiles and diaries are never published.</p>
+
+    <!-- Weekly insights shared back with participants -->
+    <div class="card mt" id="insights-card">
+      <h3>This week, zone by zone</h3>
+      <p class="muted small" id="insights-range"></p>
+      <p class="insight-head" id="insights-headline"></p>
+      <div class="insight-grid" id="insights"><div class="empty">Loading…</div></div>
+    </div>
+
+    <!-- SOP 1-6: registration -->
+    <div class="card mt">
+      <h3>Steps 1–6 · Participants</h3>
+      <div class="stats" style="margin-bottom:16px">
+        <div class="stat"><div class="value" id="s-reg">–</div><div class="label">Registered (target {{ cfg.REGISTRATION_TARGET }})</div></div>
+        <div class="stat"><div class="value" id="s-profiles">–</div><div class="label">Completed profiles + consent</div></div>
+        <div class="stat"><div class="value" id="s-city">{{ cfg.CITY }}</div><div class="label">City</div></div>
+      </div>
+      <div class="grid grid-3" id="s-demographics"></div>
+    </div>
+
+    <!-- SOP 7: diary / PAQE -->
+    <div class="card mt">
+      <h3>Step 7 · Time-activity diaries and personal exposure (PAQE)</h3>
+      <div class="stats" style="margin-bottom:16px">
+        <div class="stat"><div class="value" id="s-diarists">–</div><div class="label">People keeping a diary</div></div>
+        <div class="stat"><div class="value" id="s-days">–</div><div class="label">Diary days logged</div></div>
+        <div class="stat"><div class="value" id="s-paqe">–</div><div class="label">Average daily PAQE (µg PM2.5)</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div><h4 class="small">Where the dose comes from (share of all PAQE)</h4><div class="mini-bars" id="s-location"></div></div>
+        <div><h4 class="small">Average daily PAQE by residential zone</h4><div class="mini-bars" id="s-zone-paqe"></div></div>
+      </div>
+      <div class="chart-box mt"><canvas id="paqe-chart" aria-label="Average daily PAQE over the study"></canvas></div>
+      <p class="muted small" style="margin:8px 0 0" id="s-completed"></p>
+    </div>
+
+    <!-- SOP 8 + 10: DRS and persistence -->
+    <div class="card mt">
+      <h3>Steps 8 and 10 · Decision Responsiveness Score (DRS) and persistence</h3>
+      <div class="stats" style="margin-bottom:16px">
+        <div class="stat"><div class="value" id="s-drs-before">–</div><div class="label">Mean DRS before alerts</div></div>
+        <div class="stat"><div class="value" id="s-drs-after">–</div><div class="label">Mean DRS after alerts</div></div>
+        <div class="stat"><div class="value" id="s-persist">–</div><div class="label">Changes persisted (Yes)</div></div>
+      </div>
+      <div class="chart-box"><canvas id="drs-chart" aria-label="Average answer per decision-making question, before and after alerts"></canvas></div>
+      <p class="muted small" style="margin:8px 0 0" id="s-drs-note"></p>
+      <div class="mt"><h4 class="small">Protective practices adopted</h4><div class="mini-bars" id="s-practices"></div></div>
+    </div>
+
+    <!-- SOP 9: hotspots -->
+    <div class="card mt">
+      <div class="map-toolbar" style="margin-bottom:8px">
+        <h3 style="margin:0">Step 9 · Pollution hotspot register</h3>
+        <div class="btn-row">
+          <a class="btn btn-sm" href="{{ url_for('study.hotspots_page') }}">Full register</a>
+          <a class="btn btn-sm" href="{{ url_for('study.download_hotspots') }}">Download .csv</a>
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div><h4 class="small">Reports by type</h4><div class="mini-bars" id="s-hs-type"></div></div>
+        <div><h4 class="small">Verification status</h4><div class="mini-bars" id="s-hs-status"></div></div>
+      </div>
+    </div>
+
+    <!-- Phase 3 micro-survey -->
+    <div class="card mt">
+      <div class="map-toolbar" style="margin-bottom:8px">
+        <h3 style="margin:0">Pollution spike check-ins</h3>
+        <a class="btn btn-sm" href="{{ url_for('study.checkin_page') }}">Open the check-in</a>
+      </div>
+      <div class="stats" style="margin-bottom:16px">
+        <div class="stat"><div class="value" id="c-count">–</div><div class="label">Check-ins during spikes</div></div>
+        <div class="stat"><div class="value" id="c-checked">–</div><div class="label">Looked at an AQI app in the last 4 h</div></div>
+        <div class="stat"><div class="value" id="c-anxiety">–</div><div class="label">Average pollution anxiety (1–5)</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div><h4 class="small">Did it change their plans?</h4><div class="mini-bars" id="c-changes"></div></div>
+        <div><h4 class="small">Anxiety, by whether they had checked the app</h4><div class="mini-bars" id="c-anx-split"></div></div>
+      </div>
+    </div>
+
+    <!-- CSOD Google Form questions from the Submit page -->
+    <div class="card mt">
+      <h3>About people's day (daily survey)</h3>
+      <p class="muted small" id="f-answered"></p>
+      <div class="grid grid-3">
+        <div><h4 class="small">Average answer (1–5)</h4><div class="mini-bars" id="f-scales"></div></div>
+        <div><h4 class="small">Activities considered</h4><div class="mini-bars" id="f-activities"></div></div>
+        <div><h4 class="small">When the AQI is Poor or Severe</h4><div class="mini-bars" id="f-actions"></div></div>
+        <div><h4 class="small">Where the AQI came from</h4><div class="mini-bars" id="f-source"></div></div>
+        <div><h4 class="small">Why people open an AQI app</h4><div class="mini-bars" id="f-trigger"></div></div>
+        <div><h4 class="small">What AQI apps should change</h4><div class="mini-bars" id="f-change"></div></div>
+        <div><h4 class="small">Sky</h4><div class="mini-bars" id="f-sky"></div></div>
+        <div><h4 class="small">Actually went outside</h4><div class="mini-bars" id="f-outside"></div></div>
+        <div><h4 class="small">Preferred place to study / work</h4><div class="mini-bars" id="f-place"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>window.Q_SHORT = ["Check AQ before leaving", "Change outdoor schedule", "Change commute route",
+  "Avoid outdoor exercise", "Consider children/elderly", "Protective practices"];</script>
+<script src="{{ url_for('static', filename='js/data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/study-data.js') }}"></script>
+{% endblock %}

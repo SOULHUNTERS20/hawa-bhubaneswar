@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}AQI advisory · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">General AQI advisory</span>
+    <h1>What the AQI means for you</h1>
+    <p>India’s National Air Quality Index (CPCB) has six bands. Find today’s band, then follow the advice for it.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="card now-card" id="advisory-now" style="margin-bottom:20px">
+      <div class="stripe" id="adv-stripe"></div>
+      <span class="kicker">Bhubaneswar right now</span>
+      <p class="lead" id="adv-now" style="margin:6px 0 0">Loading…</p>
+    </div>
+
+    {% set bands = [
+      ("Good", "0–50", "Minimal impact.", "Enjoy outdoor activities."),
+      ("Satisfactory", "51–100", "Minor breathing discomfort to sensitive people.",
+       "Sensitive people (asthma, heart or lung disease) should watch for symptoms during long outdoor exercise."),
+      ("Moderate", "101–200", "Breathing discomfort to people with lung disease such as asthma, and discomfort to people with heart disease, children and older adults.",
+       "Sensitive groups: shorten hard outdoor exercise. Everyone: avoid busy roads for walks and runs."),
+      ("Poor", "201–300", "Breathing discomfort to most people on prolonged exposure.",
+       "Move exercise indoors, wear an N95 mask outdoors, keep windows closed at peak hours, use a purifier if you have one."),
+      ("Very Poor", "301–400", "Respiratory illness on prolonged exposure.",
+       "Avoid outdoor exertion. Children, older adults and people with illnesses should stay indoors as much as possible."),
+      ("Severe", "401–500", "Affects healthy people and seriously impacts those with existing diseases.",
+       "Stay indoors with windows closed, run purifiers, wear N95 masks if you must go out, and seek medical help for breathing problems."),
+    ] %}
+    <div class="grid grid-3">
+      {% for name, range, impact, todo in bands %}
+      <article class="card advisory-card">
+        <div class="band-bar" data-band="{{ name }}"></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="aqi-chip" data-band="{{ name }}">{{ name }}</span>
+          <b>AQI {{ range }}</b></div>
+        <p class="small" style="margin:10px 0 6px"><b>Health impact (CPCB):</b> {{ impact }}</p>
+        <p class="small muted" style="margin:0"><b>What to do:</b> {{ todo }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    <p class="muted small mt">General guidance only, not medical advice. Anyone with breathing problems, chest pain or asthma
+      symptoms should see a doctor.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <h2>Posters</h2>
+    {% if posters %}
+    <div class="grid grid-3">
+      {% for p in posters %}
+      <a class="card poster" href="{{ url_for('static', filename='posters/' + p) }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('static', filename='posters/' + p) }}" alt="AQI advisory poster {{ loop.index }}" loading="lazy">
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No posters yet. Put poster images (PNG or JPG) in the <code>static/posters</code> folder and they
+      appear here automatically.</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Current city AQI: official stations where available, otherwise the model
+  Hawa.getJSON("/api/live").then(function (live) {
+    var vals = live.zones.map(function (z) { return z.station ? z.station.aqi : z.aqi; })
+                         .filter(function (v) { return v !== null && v !== undefined; });
+    if (!vals.length) { document.getElementById("adv-now").textContent = "Live data is unavailable right now."; return; }
+    var avg = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
+    var b = Hawa.band(avg);
+    document.getElementById("adv-stripe").style.background = b.color;
+    document.getElementById("adv-now").innerHTML = "AQI about <b>" + avg + "</b> " + Hawa.chip(avg, false) +
+      ". Follow the <b>" + b.name + "</b> advice below.";
+  }).catch(function () {
+    document.getElementById("adv-now").textContent = "Live data is unavailable right now. Use the AQI from your app or monitor.";
+  });
+</script>
+{% endblock %}

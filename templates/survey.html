@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Decision-making survey · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">SOP steps 8 and 10 · Decision making after PAQE assessment</span>
+    <h1>Behaviour survey</h1>
+    <p>Answer once <b>before</b> the alerts start (day 1) and once <b>after</b> the alert period (day {{ cfg.STUDY_DAYS }}).
+      Comparing the two shows whether the PAQE alerts changed what people do.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap" style="max-width:860px">
+    <div class="alert alert-warn hidden" id="no-id-note">You need a participant ID first.
+      <a href="{{ url_for('participant_page') }}"><b>Register →</b></a></div>
+
+    <form class="card form" id="survey-form" novalidate>
+      <div class="field">
+        <span class="label" id="phase-label">When are you answering?</span>
+        <div class="pills" role="radiogroup" aria-labelledby="phase-label">
+          {% for p in cfg.SURVEY_PHASES %}
+          <input type="radio" name="phase" id="phase-{{ loop.index }}" value="{{ p }}"{% if loop.first %} checked{% endif %}>
+          <label for="phase-{{ loop.index }}">{{ p }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <p class="muted small" style="margin:0">Scale: 1 Never · 2 Rarely · 3 Sometimes · 4 Frequently · 5 Always</p>
+      {% for q in cfg.DECISION_QUESTIONS %}
+      {% set qi = loop.index %}
+      <div class="field likert">
+        <span class="label" id="q{{ qi }}-label">{{ qi }}. {{ q }}</span>
+        <div class="pills" role="radiogroup" aria-labelledby="q{{ qi }}-label">
+          {% for opt in cfg.LIKERT %}
+          <input type="radio" name="q{{ qi }}" id="q{{ qi }}-{{ loop.index }}" value="{{ loop.index }}">
+          <label for="q{{ qi }}-{{ loop.index }}">{{ loop.index }} {{ opt }}</label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="field">
+        <span class="label">Which protective practices have you adopted? (tick all that apply)</span>
+        <div class="pills">
+          {% for p in cfg.PROTECTIVE_PRACTICES %}
+          <input type="checkbox" name="practice" id="pr-{{ loop.index }}" value="{{ p }}">
+          <label for="pr-{{ loop.index }}">{{ p }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field hidden" id="persist-field">
+        <span class="label" id="persist-label">{{ cfg.PERSIST_QUESTION }}</span>
+        <div class="pills" role="radiogroup" aria-labelledby="persist-label">
+          <input type="radio" name="persist" id="persist-yes" value="Yes"><label for="persist-yes">Yes</label>
+          <input type="radio" name="persist" id="persist-no" value="No"><label for="persist-no">No</label>
+        </div>
+      </div>
+
+      <div id="survey-msg" role="status" aria-live="polite"></div>
+      <button class="btn btn-primary" type="submit" id="survey-btn">Submit and see my DRS</button>
+    </form>
+
+    <details class="card mt">
+      <summary><b>What is the Decision Responsiveness Score (DRS)?</b></summary>
+      <p class="formula mt">DRS = (S₁ + S₂ + … + Sₘ) ÷ m</p>
+      <p class="small muted" style="margin:0">Sₖ is your answer (1–5) to each decision-making question and m is the number of
+        questions ({{ cfg.DECISION_QUESTIONS | length }}). A DRS near 5 means you almost always act on air-quality
+        information; near 1 means you rarely do.</p>
+    </details>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>window.Q_COUNT = {{ cfg.DECISION_QUESTIONS | length }}; window.LAST_PHASE = {{ cfg.SURVEY_PHASES[-1] | tojson }};</script>
+<script src="{{ url_for('static', filename='js/survey.js') }}"></script>
+{% endblock %}

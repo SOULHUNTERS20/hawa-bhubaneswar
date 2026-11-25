@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Submit a reading · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Daily survey</span>
+    <h1>Submit today's reading</h1>
+    <p>Under a minute. Numbers are optional if you don't have a monitor: how the air feels is useful data too.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap" style="max-width:760px">
+
+    <!-- Shown only when this browser has no participant ID -->
+    <div class="alert alert-warn hidden" id="no-id-alert">
+      You need a participant ID first. <a href="{{ url_for('participant_page') }}"><b>Get my ID →</b></a>
+      (or type an existing one below)
+    </div>
+
+    <form class="card form mt" id="survey" novalidate>
+      <div class="row-2">
+        <div class="field">
+          <label for="participant_id">Participant ID</label>
+          <input type="text" id="participant_id" placeholder="BBSR-Z3-482" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="zone">Zone you're in right now</label>
+          <select id="zone" required>
+            {% for z in zones %}<option value="{{ z.id }}">Zone {{ z.id }}: {{ z.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="row-3">
+        <div class="field">
+          <label for="aqi">AQI reading</label>
+          <input type="number" id="aqi" min="0" max="500" step="1" inputmode="numeric" placeholder="0–500">
+          <span class="hint">From a monitor or app, if you have one.</span>
+        </div>
+        <div class="field">
+          <label for="pm25">PM2.5 (µg/m³)</label>
+          <input type="number" id="pm25" min="0" max="999" step="0.1" inputmode="decimal" placeholder="optional">
+        </div>
+        <div class="field">
+          <label for="temp">Temperature (°C)</label>
+          <input type="number" id="temp" min="-5" max="55" step="0.1" inputmode="decimal" placeholder="-5 to 55">
+          <button type="button" class="btn btn-sm" id="fill-temp" style="justify-self:start">Use live temperature</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="feel-label">How does the air smell / feel?</span>
+        <div class="pills" role="radiogroup" aria-labelledby="feel-label">
+          {% for f in feel_options %}
+          <input type="radio" name="feel" id="feel-{{ loop.index }}" value="{{ f }}">
+          <label for="feel-{{ loop.index }}">{{ f }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="activity">What were you doing?</label>
+        <select id="activity">
+          <option value="">Choose one…</option>
+          {% for a in activity_options %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="note">Note (optional)</label>
+        <textarea id="note" maxlength="{{ note_max }}" placeholder="e.g. garbage burning near the market"></textarea>
+        <span class="hint"><span id="note-count">0</span> / {{ note_max }} characters. Please don't include names or addresses.</span>
+      </div>
+
+      {# ---- CSOD exercise questions (the Google Form draft), all optional ---- #}
+      {% macro pills(name, options, multi=False) %}
+        <div class="pills" role="{{ 'group' if multi else 'radiogroup' }}" aria-labelledby="{{ name }}-label">
+          {% for o in options %}
+          <input type="{{ 'checkbox' if multi else 'radio' }}" name="{{ name }}" id="{{ name }}-{{ loop.index }}" value="{{ o }}">
+          <label for="{{ name }}-{{ loop.index }}">{{ o }}</label>
+          {% endfor %}
+        </div>
+      {% endmacro %}
+      <div class="form-part">
+        <h3>About your day</h3>
+        <p class="muted small">Optional. Helps us see how air quality changes what people do.</p>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="aqi_source">Where did the AQI come from?</label>
+            <select id="aqi_source">
+              <option value="">Choose…</option>
+              {% for s in cfg.AQI_SOURCES %}<option>{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <span class="label" id="went_outside-label">Did you actually go outside today?</span>
+            {{ pills("went_outside", ["Yes", "No"]) }}
+          </div>
+        </div>
+        <div class="field">
+          <span class="label" id="sky-label">Sky</span>
+          {{ pills("sky", cfg.SKY_OPTIONS) }}
+        </div>
+        <div class="field">
+          <span class="label" id="humidity-label">Humidity</span>
+          {{ pills("humidity", cfg.HUMIDITY_OPTIONS) }}
+        </div>
+        <div class="field">
+          <span class="label" id="activities-label">Which activities are you considering today? <span class="muted">(all that apply)</span></span>
+          {{ pills("activities", cfg.DAY_ACTIVITIES, multi=True) }}
+        </div>
+
+        <div class="scales">
+          {% for column, question in cfg.FORM_SCALES %}
+          <div class="scale-row">
+            <span class="label" id="scale{{ loop.index }}-label">{{ question }}</span>
+            <div class="pills scale" role="radiogroup" aria-labelledby="scale{{ loop.index }}-label" data-col="{{ column }}">
+              {% set outer = loop.index %}
+              {% for n in range(1, 6) %}
+              <input type="radio" name="scale{{ outer }}" id="scale{{ outer }}-{{ n }}" value="{{ n }}">
+              <label for="scale{{ outer }}-{{ n }}">{{ n }}</label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+          <p class="hint">1 = very unlikely / uncomfortable, 5 = very likely / comfortable</p>
+        </div>
+
+        <div class="field">
+          <span class="label" id="study_place-label">Where would you rather study or work today?</span>
+          {{ pills("study_place", cfg.STUDY_PLACES) }}
+        </div>
+        <div class="field">
+          <span class="label" id="app_trigger-label">What usually makes you open an AQI app or website?</span>
+          {{ pills("app_trigger", cfg.APP_TRIGGERS) }}
+        </div>
+        <div class="field">
+          <span class="label" id="poor_actions-label">When the AQI is Poor or Severe, what do you do? <span class="muted">(all that apply)</span></span>
+          {{ pills("poor_actions", cfg.POOR_AQI_ACTIONS, multi=True) }}
+        </div>
+        <div class="field">
+          <span class="label" id="app_change-label">What should AQI apps change?</span>
+          {{ pills("app_change", cfg.APP_CHANGES) }}
+        </div>
+      </div>
+
+      <label class="check">
+        <input type="checkbox" id="consent">
+        <span>I agree that this reading can be stored and shared publicly, without my identity, for academic and citizen-science use.
+          <a href="{{ url_for('ethics') }}" target="_blank">Read the ethics page</a>.</span>
+      </label>
+
+      <div id="form-msg" role="status" aria-live="polite"></div>
+      <button class="btn btn-primary" type="submit" id="submit-btn">Submit reading</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/submit.js') }}"></script>
+{% endblock %}

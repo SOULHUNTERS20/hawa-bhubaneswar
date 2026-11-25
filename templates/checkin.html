@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Spike check-in · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap tp-wrap">
+    <span class="kicker">Pollution spike check-in</span>
+    <h1>Three quick questions</h1>
+    <p>We send this when the air gets bad, to learn whether people notice and what they do about it. About 20 seconds.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap tp-wrap">
+    <div class="alert alert-warn hidden" id="no-id-note">You need a participant ID first.
+      <a href="{{ url_for('participant_page') }}"><b>Register →</b></a></div>
+
+    <div class="checkin-now" id="checkin-now"><span class="muted small">Checking the air right now…</span></div>
+
+    <form class="card form" id="checkin-form" novalidate>
+      <div class="field">
+        <span class="label" id="checked-label">1. Did you look at an AQI app or website in the last 4 hours?</span>
+        <div class="pills" role="radiogroup" aria-labelledby="checked-label">
+          <input type="radio" name="checked" id="checked-yes" value="Yes"><label for="checked-yes">Yes</label>
+          <input type="radio" name="checked" id="checked-no" value="No"><label for="checked-no">No</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="changes-label">2. Did it change your plans? <span class="muted">(all that apply)</span></span>
+        <div class="pills" role="group" aria-labelledby="changes-label">
+          {% for c in cfg.PLAN_CHANGES %}
+          <input type="checkbox" name="changes" id="change-{{ loop.index }}" value="{{ c }}">
+          <label for="change-{{ loop.index }}">{{ c }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="anxiety-label">3. How anxious do you feel about the pollution right now?</span>
+        <div class="pills scale" role="radiogroup" aria-labelledby="anxiety-label">
+          {% for n in range(1, 6) %}
+          <input type="radio" name="anxiety" id="anxiety-{{ n }}" value="{{ n }}"><label for="anxiety-{{ n }}">{{ n }}</label>
+          {% endfor %}
+        </div>
+        <span class="hint">1 = not at all, 5 = very anxious</span>
+      </div>
+
+      <div id="checkin-msg" role="status" aria-live="polite"></div>
+      <button class="btn btn-primary" type="submit" id="checkin-btn">Send check-in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/checkin.js') }}"></script>
+{% endblock %}

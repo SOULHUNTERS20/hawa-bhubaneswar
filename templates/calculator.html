@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Personal AQI calculator · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Personal AQI (pAQI)</span>
+    <h1>What do <em style="font-style:normal;color:var(--accent)">you</em> breathe?</h1>
+    <p>The outdoor AQI assumes you stand on the street all day. Your real exposure depends on how you travel,
+      where you work, how you exercise and your home. Fill in your typical day; results update as you type.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap calc-layout">
+    <!-- ===== Inputs ===== -->
+    <form class="card form" id="calc-form" onsubmit="return false">
+      <div class="calc-block">
+        <h3><span class="n">1</span> Zone and outdoor air</h3>
+        <div class="field">
+          <label for="zone">Your zone</label>
+          <select id="zone">
+            {% for z in zones %}<option value="{{ z.id }}">Zone {{ z.id }}: {{ z.name }}</option>{% endfor %}
+          </select>
+          <span class="hint" id="zone-hint">Loading live PM2.5…</span>
+        </div>
+        <div class="field">
+          <label for="custom-aqi">Use my own outdoor AQI instead (optional)</label>
+          <input type="number" id="custom-aqi" min="0" max="500" inputmode="numeric" placeholder="e.g. 160">
+        </div>
+      </div>
+
+      <div class="calc-block">
+        <h3><span class="n">2</span> Commute</h3>
+        <div class="row-2">
+          <div class="field"><label for="commute">How you travel</label><select id="commute"></select></div>
+          <div class="field"><label for="commute-h">Hours per day</label><input type="number" id="commute-h" min="0" max="24" step="0.25" value="1.5"></div>
+        </div>
+        <div class="field"><label for="mask">Mask while commuting</label><select id="mask"></select></div>
+      </div>
+
+      <div class="calc-block">
+        <h3><span class="n">3</span> Work or study</h3>
+        <div class="row-2">
+          <div class="field"><label for="work">Workplace type</label><select id="work"></select></div>
+          <div class="field"><label for="work-h">Hours per day</label><input type="number" id="work-h" min="0" max="24" step="0.25" value="8"></div>
+        </div>
+      </div>
+
+      <div class="calc-block">
+        <h3><span class="n">4</span> Exercise</h3>
+        <div class="row-2">
+          <div class="field"><label for="exercise">Exercise type</label><select id="exercise"></select></div>
+          <div class="field"><label for="exercise-h">Hours per day</label><input type="number" id="exercise-h" min="0" max="24" step="0.25" value="1"></div>
+        </div>
+      </div>
+
+      <div class="calc-block">
+        <h3><span class="n">5</span> Home and sleep</h3>
+        <div class="row-2">
+          <div class="field"><label for="home">Home type</label><select id="home"></select></div>
+          <div class="field">
+            <label for="home-h">Hours per day</label>
+            <input type="number" id="home-h" readonly tabindex="-1">
+            <span class="hint">The rest of your 24 hours.</span>
+          </div>
+        </div>
+      </div>
+      <div id="calc-error" class="alert alert-error hidden" role="alert"></div>
+    </form>
+
+    <!-- ===== Results ===== -->
+    <div class="calc-results" aria-live="polite">
+      <div class="card">
+        <h3>Your result</h3>
+        <div class="compare">
+          <div class="box you" id="you-box">
+            <div class="small">Your pAQI</div>
+            <div class="num" id="paqi">–</div>
+            <div id="paqi-band" class="small"></div>
+          </div>
+          <div class="box">
+            <div class="small muted">Outdoor AQI (PM2.5)</div>
+            <div class="num" id="outdoor">–</div>
+            <div id="outdoor-band"></div>
+          </div>
+        </div>
+        <p class="mt" id="summary-line"></p>
+
+        <h3 class="mt">Where your dose comes from</h3>
+        <div class="breakdown" id="breakdown"></div>
+
+        <h3 class="mt">What if…</h3>
+        <ul class="whatif" id="whatif"></ul>
+      </div>
+
+      <details class="card mt">
+        <summary><b>How it's calculated</b></summary>
+        <p class="formula mt">E = Σ ( C<sub>i</sub> × T<sub>i</sub> × IR<sub>i</sub> )</p>
+        <ul class="small muted" style="padding-left:18px">
+          <li><b>C<sub>i</sub></b>: PM2.5 in each place = outdoor PM2.5 × infiltration factor (× (1 − mask filtration) on the commute).</li>
+          <li><b>T<sub>i</sub></b>: hours spent there. <b>IR<sub>i</sub></b>: breathing rate in m³/hour (higher when exercising).</li>
+          <li><b>pAQI</b> converts your total dose back into the AQI of the air a resting adult (0.5 m³/h) would have to breathe for 24 hours to get the same dose.</li>
+          <li>Factors are typical values from exposure-science literature, rounded. This is an educational estimate, not a measurement.</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+{% endblock %}

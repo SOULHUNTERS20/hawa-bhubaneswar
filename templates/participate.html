@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Take part · {{ site_name }}{% endblock %}
+
+{% macro chevron() %}<svg class="tp-go" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>{% endmacro %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap tp-wrap">
+    <span class="kicker">{{ cfg.GROUP_NAME }} · {{ cfg.STUDY_DAYS }}-day study</span>
+    <h1>Take part</h1>
+    <p>Five short steps over two weeks. Progress is saved to the participant ID on this device.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap tp-wrap">
+
+    <!-- Progress summary -->
+    <div class="tp-summary">
+      <div class="tp-stat">
+        <span>Participant ID</span>
+        <b id="tp-id">Not registered</b>
+      </div>
+      <div class="tp-stat">
+        <span>Diary</span>
+        <b id="tp-days">0 / {{ cfg.STUDY_DAYS }} days</b>
+      </div>
+      <div class="tp-stat">
+        <span>Complete</span>
+        <b id="tp-pct">0%</b>
+      </div>
+      <div class="tp-bar" aria-hidden="true"><div id="tp-bar-fill"></div></div>
+    </div>
+
+    <!-- Today's personalized alert (SOP step 7) -->
+    <div class="tp-alert hidden" id="alert-card">
+      <div class="tp-alert-head">
+        <b>Today’s alert</b>
+        <span class="muted small" id="alert-total"></span>
+      </div>
+      <ul id="alert-list"></ul>
+    </div>
+
+    <!-- Shown when the city AQI is at spike level (CSOD Phase 3 micro-survey) -->
+    <a class="tp-spike hidden" id="spike-card" href="{{ url_for('study.checkin_page') }}">
+      <span><b>The air is bad right now</b> <span id="spike-aqi"></span><br>
+        <span class="small">Three quick questions about what you're doing about it.</span></span>
+      <span class="btn btn-sm btn-primary">Check in</span>
+    </a>
+
+    <!-- Weekly insight for the participant's own zone -->
+    <div class="insight tp-week hidden" id="week-card">
+      <h4><span id="week-title">This week in your zone</span><span id="week-chip"></span></h4>
+      <ul id="week-lines"></ul>
+    </div>
+
+    <!-- The steps, in the order a participant does them -->
+    <ol class="tp-steps">
+      <li><a class="tp-step" data-step="register" href="{{ url_for('participant_page') }}">
+        <span class="tp-num">1</span>
+        <span class="tp-body">
+          <span class="tp-title">Register <small>SOP 1–6</small></span>
+          <span class="tp-desc">Consent and a short anonymous profile. About a minute.</span>
+        </span>
+        <span class="tp-status"></span>{{ chevron() }}
+      </a></li>
+      <li><a class="tp-step" data-step="before" href="{{ url_for('study.survey_page') }}?phase=before">
+        <span class="tp-num">2</span>
+        <span class="tp-body">
+          <span class="tp-title">First survey <small>SOP 8a</small></span>
+          <span class="tp-desc">Six quick questions on day 1, before any alerts.</span>
+        </span>
+        <span class="tp-status"></span>{{ chevron() }}
+      </a></li>
+      <li><a class="tp-step" data-step="diary" href="{{ url_for('study.diary_page') }}">
+        <span class="tp-num">3</span>
+        <span class="tp-body">
+          <span class="tp-title">Daily diary <small>SOP 7</small></span>
+          <span class="tp-desc">Where you were and what you did, each day. We work out your exposure and alerts.</span>
+        </span>
+        <span class="tp-status"></span>{{ chevron() }}
+      </a></li>
+      <li><a class="tp-step" data-step="after" href="{{ url_for('study.survey_page') }}?phase=after">
+        <span class="tp-num">4</span>
+        <span class="tp-body">
+          <span class="tp-title">Final survey <small>SOP 8b, 10</small></span>
+          <span class="tp-desc">The same questions on day {{ cfg.STUDY_DAYS }}, and whether the changes stuck.</span>
+        </span>
+        <span class="tp-status"></span>{{ chevron() }}
+      </a></li>
+      <li><a class="tp-step" data-step="hotspot" href="{{ url_for('study.hotspots_page') }}">
+        <span class="tp-num">5</span>
+        <span class="tp-body">
+          <span class="tp-title">Report hotspots <small>SOP 9 · any time</small></span>
+          <span class="tp-desc">Dust, smoke, burning or heavy traffic you notice. Students verify each one.</span>
+        </span>
+        <span class="tp-status"></span>{{ chevron() }}
+      </a></li>
+    </ol>
+
+    <p class="tp-foot">
+      <span id="tp-count"></span>
+      Have a monitor? <a href="{{ url_for('submit_page') }}">Submit a reading</a> any time.
+      When the air spikes we'll ask you to <a href="{{ url_for('study.checkin_page') }}">check in</a>.
+      Advice for everyone is on the <a href="{{ url_for('study.advisory_page') }}">Advisory</a> page.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/participate.js') }}"></script>
+{% endblock %}

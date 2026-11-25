@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Live map · {{ site_name }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Live map</span>
+    <h1>Air across the city</h1>
+    <p>One marker per zone, coloured by CPCB AQI band. Tap a marker for the latest readings and notes from the community.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="map-toolbar">
+      <div class="segmented" role="group" aria-label="Colour markers by">
+        <button type="button" class="on" data-mode="community">Community readings</button>
+        <button type="button" data-mode="live">Official / model AQI</button>
+      </div>
+      <div class="legend small">
+        <span class="aqi-chip" data-band="Good">Good</span>
+        <span class="aqi-chip" data-band="Satisfactory">Satisfactory</span>
+        <span class="aqi-chip" data-band="Moderate">Moderate</span>
+        <span class="aqi-chip" data-band="Poor">Poor</span>
+        <span class="aqi-chip" data-band="Very Poor">Very Poor</span>
+        <span class="aqi-chip" data-band="Severe">Severe</span>
+        <span class="aqi-chip">No data</span>
+      </div>
+    </div>
+    <div id="map" role="region" aria-label="Map of the five study zones"></div>
+    <p class="muted small mt" id="map-note"></p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

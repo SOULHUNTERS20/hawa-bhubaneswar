@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Hotspot register · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">SOP step 9 · Citizen-reported pollution hotspot register</span>
+    <h1>Report a pollution hotspot</h1>
+    <p>Seen construction dust, heavy trucks, waste burning, road dust or industrial smoke? Report it here.
+      Students verify every report before it counts as confirmed, and no report blames anyone.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap grid grid-2" style="align-items:start">
+    <form class="card form" id="hotspot-form" novalidate>
+      <div class="alert alert-warn hidden" id="no-id-note">You need a participant ID to report.
+        <a href="{{ url_for('participant_page') }}"><b>Register →</b></a></div>
+      <div class="row-2">
+        <div class="field">
+          <label for="hs-zone">Zone</label>
+          <select id="hs-zone">{% for z in zones %}<option value="{{ z.id }}">Zone {{ z.id }}: {{ z.name }}</option>{% endfor %}</select>
+        </div>
+        <div class="field">
+          <label for="hs-type">What did you see?</label>
+          <select id="hs-type"><option value="">Choose…</option>
+            {% for t in cfg.HOTSPOT_TYPES %}<option>{{ t }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="hs-landmark">Nearby landmark</label>
+        <input type="text" id="hs-landmark" maxlength="80" placeholder="e.g. near Rasulgarh Square flyover">
+        <span class="hint">A public landmark, never a home address.</span>
+      </div>
+      <div class="field">
+        <label for="hs-desc">What and when (optional)</label>
+        <textarea id="hs-desc" maxlength="200" placeholder="e.g. dust cloud from building site, 8–10 AM"></textarea>
+      </div>
+      <p class="small muted" style="margin:0" id="hs-method"></p>
+      <label class="check"><input type="checkbox" id="hs-safe"> <span>I observed this from a safe, public place and did not
+        enter any site or confront anyone.</span></label>
+      <div id="hs-msg" role="status"></div>
+      <button class="btn btn-primary" type="submit" id="hs-btn">Submit report</button>
+    </form>
+
+    <div class="card">
+      <h3>How students verify each report</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Reported observation</th><th>Student verification</th></tr></thead>
+          <tbody>
+          {% for t, m in cfg.HOTSPOT_TYPES.items() %}<tr><td>{{ t }}</td><td class="wrap-cell">{{ m }}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="map-toolbar">
+      <h2 style="margin:0">Hotspot register</h2>
+      <a class="btn btn-sm" href="{{ url_for('study.download_hotspots') }}">Download .csv</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Reported</th><th>Zone</th><th>Observation</th><th>Landmark</th><th>Details</th><th>Status</th></tr></thead>
+        <tbody id="hs-rows"><tr><td colspan="6"><div class="empty">Loading…</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>window.HS_METHODS = {{ cfg.HOTSPOT_TYPES | tojson }};</script>
+<script src="{{ url_for('static', filename='js/hotspots.js') }}"></script>
+{% endblock %}

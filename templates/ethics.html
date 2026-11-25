@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Ethics &amp; consent · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Ethics &amp; consent</span>
+    <h1>Your data, in plain language</h1>
+    <p>What we collect, what we never collect, and how the data is used.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap prose">
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>✓ What we collect</h3>
+        <ul class="small">
+          <li>A random participant ID (like BBSR-Z3-482) and your consent</li>
+          <li>City and residential zone (one of 5 large areas, not your address)</li>
+          <li>Age <b>group</b>, gender and occupation / workplace type (SOP steps 4–6)</li>
+          <li>Your daily time-activity diary: time blocks, type of place and activity (SOP step 7)</li>
+          <li>Survey answers on how you act on air-quality information (SOP steps 8, 10)</li>
+          <li>Hotspot reports with a public landmark (SOP step 9)</li>
+          <li>Community readings: AQI / PM2.5, temperature, how the air felt, an optional note (max {{ note_max }} characters)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>✗ What we never collect</h3>
+        <ul class="small">
+          <li>Names, emails or phone numbers</li>
+          <li>Exact addresses or GPS location</li>
+          <li>Photos, contacts or device information</li>
+          <li>Health or medical information</li>
+          <li>Tracking cookies or advertising IDs</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Consent and who can take part</h2>
+    <p>Taking part is voluntary and needs your consent at registration. Participants must be 18 or older. You can stop
+      at any time. The study follows the {{ cfg.GROUP_NAME }} Standard Operating Protocol: {{ cfg.REGISTRATION_TARGET }}
+      participants, {{ cfg.STUDY_DAYS }} days of diaries, a survey before and after the alerts, and a hotspot register.</p>
+
+    <h2>How your ID works</h2>
+    <p>When you register, the server makes a random ID and saves it with your zone, profile answers and the date.
+      Your browser remembers the ID (in "localStorage") so you don't have to type it again. Nobody, including the
+      project team, can tell who is behind an ID unless you tell them.</p>
+
+    <h2>Who can see the data</h2>
+    <ul>
+      <li><b>Public:</b> community readings (Data page, downloadable), the hotspot register (without who reported it), and
+        <b>group totals</b> for profiles, diaries and surveys.</li>
+      <li><b>Project team only:</b> individual profiles, diaries and survey answers. With only {{ cfg.REGISTRATION_TARGET }}
+        participants, combining age, gender, occupation and zone could identify someone, so these are never published
+        row by row.</li>
+    </ul>
+    <p>Please don't write names, addresses or anything personal in notes or hotspot reports.</p>
+
+    <h2>What the data is for</h2>
+    <ul>
+      <li>Academic research and student projects about urban air quality</li>
+      <li>Citizen science: showing how air differs between neighbourhoods</li>
+      <li>Comparing what people experience with model and official estimates</li>
+      <li>Estimating personal exposure (PAQE) and whether alerts change behaviour (DRS)</li>
+    </ul>
+    <p>Hotspot reports record what was seen and where. They are verified by students and never treated as proof of who
+      caused the pollution.</p>
+    <p>It is <b>not</b> official government data and must <b>not</b> be used for medical decisions.
+      Low-cost monitors and phone apps can be inaccurate.</p>
+
+    <h2>Quality checks</h2>
+    <p>Readings that are very different from the live model value for the same zone are <b>flagged, not deleted</b>.
+      Sometimes the community is right and the model is wrong, which is exactly what we want to find out. The project
+      team may remove obvious spam or test entries.</p>
+
+    <h2>Ask Hawa (AI assistant)</h2>
+    <p>Ask Hawa uses Google’s Gemini AI on its <b>free tier</b>. When you ask a question, your question and a summary
+      of this site’s air data are sent to Google. On the free tier, Google may use them to improve its products, and
+      people at Google may read them. So:</p>
+    <ul>
+      <li><b>Never type personal details</b> (names, phone numbers, addresses, health records) into Ask Hawa.</li>
+      <li>Ask Hawa is for <b>people aged 18 or older</b>, as Google’s terms require.</li>
+      <li>We don’t save your questions on this site, and Ask Hawa never sees participant IDs.</li>
+      <li>AI can be wrong. Its answers are not official and not medical advice.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <ul>
+      <li>Taking part is voluntary. You can stop at any time.</li>
+      <li>You can remove your ID from your browser on the <a href="{{ url_for('participant_page') }}">My ID</a> page.</li>
+      <li>To have your readings deleted, contact the project team with your participant ID.</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

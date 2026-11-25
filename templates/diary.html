@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Daily diary · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">SOP step 7 · Daily data collection sheet</span>
+    <h1>Time-activity diary</h1>
+    <p>Fill in where you were and what you were doing, once a day for {{ cfg.STUDY_DAYS }} days. We match each time block
+      with the hourly outdoor PM2.5 for your zone and work out your Personal Air Quality Exposure (PAQE).</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="alert alert-warn hidden" id="no-id-note">You need a participant ID first.
+      <a href="{{ url_for('participant_page') }}"><b>Register →</b></a></div>
+
+    <div class="card form" id="diary-card">
+      <div class="row-2" style="align-items:end">
+        <div class="field">
+          <label for="diary-date">Date</label>
+          <input type="date" id="diary-date" max="{{ today }}" value="{{ today }}">
+        </div>
+        <div>
+          <p class="small" style="margin:0" id="progress-text">…</p>
+          <div class="bd-track" style="height:12px"><div class="bd-fill" id="progress-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="diary-table">
+          <thead><tr><th>From</th><th>To</th><th>Location (microenvironment)</th><th>Activity</th><th></th></tr></thead>
+          <tbody id="blocks"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" type="button" id="add-block">+ Add time block</button>
+        <button class="btn btn-sm" type="button" id="sop-day">Use the SOP standard day</button>
+      </div>
+      <div id="diary-msg" role="status"></div>
+      <button class="btn btn-primary" type="button" id="save-diary">Save day and calculate my PAQE</button>
+    </div>
+
+    <!-- Results -->
+    <div class="card mt hidden" id="results">
+      <h3 id="results-title">Your exposure</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Location</th><th>Activity</th><th>Duration</th><th>Outdoor PM2.5</th>
+            <th>Infiltration</th><th>Micro PM2.5</th><th>Breathing</th><th>PAQE</th></tr></thead>
+          <tbody id="result-rows"></tbody>
+        </table>
+      </div>
+      <p class="mt" id="result-total"></p>
+      <h3 class="mt">Personalized alerts</h3>
+      <ul class="whatif" id="result-alerts"></ul>
+    </div>
+
+    <!-- Method + the SOP's worked example -->
+    <details class="card mt">
+      <summary><b>How PAQE is calculated (SOP parts A–C)</b></summary>
+      <p class="formula mt">PAQE = Hours × (Outdoor PM2.5 × Infiltration factor) × Breathing rate</p>
+      <ul class="small muted" style="padding-left:18px">
+        <li><b>Outdoor PM2.5</b>: hourly values for your zone's location from Open-Meteo (CAMS model). When Open-Meteo's
+          free daily limit is used up, we use the hourly averages of the official CPCB station for your zone (Patia,
+          Lingraj Mandir, or the nearest one) via OpenAQ. The source is shown under your results. The SOP names the Google
+          Air Quality API, which is a paid service; these free sources give the same hourly history.</li>
+        <li><b>Infiltration factor</b> (indoor ÷ outdoor): open windows / no filter ≈ 0.7–0.9 (we use 0.8);
+          closed windows / HEPA purifier ≈ 0.1–0.3 (we use 0.2); road and park = 1.0 (direct exposure).</li>
+        <li><b>Breathing rate</b>: resting / desk work ≈ 0.5 m³/h; light walking ≈ 1.0; commuting 1.2 (as in the SOP sample);
+          heavy exercise / cycling ≈ 2.5–3.0 (we use 2.5).</li>
+      </ul>
+      <p class="small"><b>The SOP's sample calculation</b> (3-hour window), using this site's factors:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time block</th><th>Microenvironment</th><th>Outdoor PM2.5</th><th>Infiltration</th>
+            <th>Micro PM2.5</th><th>Breathing</th><th>Exposure</th></tr></thead>
+          <tbody>
+          {% for r in sample_rows %}
+            <tr><td>{{ r.time }}</td><td>{{ r.location_label }}</td><td>{{ r.outdoor }} µg/m³</td><td>{{ r.factor }}</td>
+              <td>{{ '%g' % r.micro }} µg/m³</td><td>{{ r.rate }} m³/h</td><td><b>{{ '%.1f' % r.paqe }}</b></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-bottom:0">Total 3-hour cumulative exposure: <b>{{ '%g' % sample_total }}</b>
+        (µg of PM2.5 inhaled; the SOP writes the unit as µg·m⁻³·hr).</p>
+    </details>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.MICRO = {{ cfg.MICROENVIRONMENTS | tojson }};
+  window.ACTS = {{ cfg.ACTIVITIES | tojson }};
+  window.SOP_DAY = {{ cfg.SOP_STANDARD_DAY | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/diary.js') }}"></script>
+{% endblock %}

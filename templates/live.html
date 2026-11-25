@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Live AQI · {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <span class="kicker">Live AQI</span>
+    <h1>Right now, zone by zone</h1>
+    <p>Official CPCB monitoring stations where a zone has one (Patia and Lingaraj), and model estimates from
+      Open-Meteo for every zone. Refreshed every 30 minutes.</p>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="status-bar" id="status-bar"><span class="muted">Loading live data…</span></div>
+    <div class="grid grid-3" id="live-grid"></div>
+
+    <div class="card mt">
+      <h3>PM2.5 over the last 24 hours (model)</h3>
+      <p class="muted small">Hourly PM2.5 (µg/m³) from Open-Meteo. The CPCB "Satisfactory" limit is 60 µg/m³ (24-hour average).</p>
+      <div class="chart-box"><canvas id="pm-chart" aria-label="PM2.5 over the last 24 hours for each zone"></canvas></div>
+    </div>
+
+    <div class="card mt">
+      <h3>How these numbers are made</h3>
+      <ul class="muted small" style="padding-left:18px;margin:0">
+        <li><b>Official station:</b> real monitors run by the Odisha State Pollution Control Board for CPCB, read through
+          OpenAQ (a non-profit that republishes government air data). Bhubaneswar has only two: Patia (zone 3) and Lingraj Mandir
+          (zone 5). Zones 1, 2 and 4 have no official monitor at all.</li>
+        <li><b>Model:</b> Open-Meteo, based on the European CAMS model. It estimates one value per ~40 km grid square, which is
+          why it shows the same number for every zone.</li>
+        <li><b>AQI</b> here uses CPCB breakpoints on PM2.5 and PM10 (the higher sub-index wins). For stations we use the latest
+          hourly reading and for the model the 24-hour average; official CPCB AQI uses 24-hour averages and also gases like
+          NO₂ and O₃, so treat these as PM-based AQI values.</li>
+        <li>If a source can't be reached, we show the last saved values with their time.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/live.js') }}"></script>
+{% endblock %}
